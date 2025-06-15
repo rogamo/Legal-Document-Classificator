@@ -24,3 +24,4 @@ st.info("Tip: If running locally, use `streamlit run streamlit_app.py`")
 
 st.markdown("---")
 st.caption("Built with ❤️ using HuggingFace Transformers and Streamlit.")
+
