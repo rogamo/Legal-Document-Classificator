@@ -1,64 +1,44 @@
 import streamlit as st
+import tensorflow as tf
+from sklearn.metrics import classification_report, confusion_matrix
 import seaborn as sns
 import matplotlib.pyplot as plt
-import pandas as pd
-from sklearn.metrics import classification_report, confusion_matrix
+import numpy as np
+import pickle
+from utils.preprocessing import prepare_text, MAX_LEN
+from utils.data import load_fake_news
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+import os
 
-st.title("🧐 Model Analysis and Justification")
+st.header("🧪 Evaluation & Error Analysis")
 
-st.markdown("""
-Explore what makes this classification problem hard, how the model was chosen, and how it performed.
-""")
+if not os.path.exists("models/bi_lstm_fake_news.h5"):
+    st.warning("Train model first using Page 3.")
+    st.stop()
 
-# Dataset challenges
-st.subheader("📌 Dataset Challenges")
-st.markdown("""
-- Imbalanced class distribution
-- Noisy or ambiguous language (e.g., sarcasm)
-- Multilinguality in some samples
-""")
+model = tf.keras.models.load_model("models/bi_lstm_fake_news.h5")
 
-# Model justification
-st.subheader("🤖 Model Choice Justification")
-st.markdown("""
-We used **XLM-RoBERTa** for its multilingual understanding capabilities and robustness to noise.
+with open("models/tokenizer.pkl", "rb") as f:
+    tokenizer = pickle.load(f)
 
-Relevant references:
-- [XLM-R: Conneau et al., 2020](https://arxiv.org/abs/1911.02116)
-- [Kaggle NLP Competitions](https://www.kaggle.com/)
-""")
+df = load_fake_news()
+tok, X_tr, X_te, y_tr, y_te = prepare_text(df)
+y_pred_prob = model.predict(X_te).ravel()
+y_pred = (y_pred_prob >= 0.5).astype(int)
 
-# Dummy classification report
-st.subheader("📋 Classification Report")
-report_dict = {
-    "precision": [0.88, 0.70, 0.80],
-    "recall": [0.90, 0.65, 0.78],
-    "f1-score": [0.89, 0.67, 0.79]
-}
-labels = ["Positive", "Negative", "Neutral"]
-df_report = pd.DataFrame(report_dict, index=labels)
-st.dataframe(df_report)
+st.subheader("Classification Report")
+report = classification_report(y_te, y_pred, target_names=["REAL", "FAKE"], output_dict=True)
+st.dataframe(report)
 
-# Dummy confusion matrix
-st.subheader("🧮 Confusion Matrix")
-conf_matrix = [[50, 2, 3],
-               [4, 30, 6],
-               [2, 5, 25]]
-
+st.subheader("Confusion Matrix")
+cm = confusion_matrix(y_te, y_pred)
 fig, ax = plt.subplots()
-sns.heatmap(conf_matrix, annot=True, fmt="d", cmap="Blues",
-            xticklabels=labels, yticklabels=labels)
+sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=["REAL", "FAKE"], yticklabels=["REAL", "FAKE"], ax=ax)
 ax.set_xlabel("Predicted")
 ax.set_ylabel("Actual")
 st.pyplot(fig)
 
-# Error analysis
-st.subheader("🔍 Error Analysis")
-st.markdown("""
-**False Positives:** Many sarcastic comments were misclassified as Positive.  
-**False Negatives:** Short neutral comments were often labeled as Negative.
-
-### Suggestions:
-- Add more data with sarcasm examples.
-- Use ensemble models or multi-task learning.
-""")
+st.subheader("Examples of Errors")
+for idx in np.where(y_te != y_pred)[0][:5]:
+    st.markdown(f"- **Text**: {df.iloc[idx]['text']}")
+    st.markdown(f"  - True: {['REAL','FAKE'][y_te[idx]]}, Predicted: {['REAL','FAKE'][y_pred[idx]]}, Prob: {y_pred_prob[idx]:.2f}")

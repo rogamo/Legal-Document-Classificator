@@ -1,38 +1,29 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
 import seaborn as sns
+import matplotlib.pyplot as plt
 from wordcloud import WordCloud
+from utils.data import load_fake_news
+from utils.preprocessing import prepare_text
 
-st.title("📊 Dataset Visualization")
+st.header("📊 Dataset Visualisation")
 
-st.markdown("Visualize important properties of the dataset, like class distribution and text length.")
+df = load_fake_news()
 
-# Dummy dataset (replace with your own)
-# For now, simulate data
-df = pd.DataFrame({
-    'text': ["I love this!", "Terrible experience...", "Meh", "So happy", "Awful", "Nice", "Worst ever", "Good", "Horrible", "Perfect"],
-    'label': ["Positive", "Negative", "Neutral", "Positive", "Negative", "Positive", "Negative", "Positive", "Negative", "Positive"]
-})
-df['length'] = df['text'].apply(len)
-
-# Class distribution
-st.subheader("Class Distribution")
+st.subheader("Class distribution")
 fig, ax = plt.subplots()
-sns.countplot(data=df, x='label', ax=ax)
+sns.countplot(df, x="target", ax=ax)
+ax.set_xticklabels(["REAL", "FAKE"])
 st.pyplot(fig)
 
-# Token length distribution
-st.subheader("Text Length Distribution")
+st.subheader("Token length")
+tok, X_tr, *_ = prepare_text(df)
+lengths = [len(x.split()) for x in df["text"]]
 fig2, ax2 = plt.subplots()
-sns.histplot(df['length'], bins=10, kde=True, ax=ax2)
+sns.histplot(lengths, bins=30, ax=ax2)
 st.pyplot(fig2)
 
-# Word cloud
-st.subheader("Word Cloud")
-text_blob = ' '.join(df['text'])
-wordcloud = WordCloud(background_color='white').generate(text_blob)
-fig3, ax3 = plt.subplots()
-ax3.imshow(wordcloud, interpolation='bilinear')
-ax3.axis("off")
-st.pyplot(fig3)
+st.subheader("Word cloud – FAKE news")
+fake_text = " ".join(df[df["target"] == 1]["text"].tolist())
+wc = WordCloud(width=800, height=400).generate(fake_text)
+st.image(wc.to_array())

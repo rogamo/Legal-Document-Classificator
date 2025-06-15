@@ -1,27 +1,26 @@
 import streamlit as st
+import importlib
 
-st.set_page_config(page_title="Text Classifier Dashboard", layout="centered")
+# ── Global page config ──────────────────────────────────────────────────────
+st.set_page_config(
+    page_title="Fake-News Classifier Dashboard",
+    page_icon="📰",
+    layout="centered",
+)
 
-st.title("🚀 Text Classification App")
-st.subheader("Transformers + Streamlit for NLP Projects")
+# ── Landing content (appears only on the main URL) ──────────────────────────
+st.title("📰 Fake-News Classification App")
+st.markdown(
+    """
+This dashboard lets you explore a **Bidirectional LSTM** model trained on the
+[LIAR](https://huggingface.co/datasets/liar) dataset to detect fake news.
 
-st.markdown("""
-Welcome to the interactive dashboard for our text classification project!  
-This app lets you explore and evaluate a fine-tuned transformer model built for NLP tasks.
+**Navigate with the sidebar** to:
+1. **Inference Interface** – paste text and get predictions.  
+2. **Dataset Visualization** – see class balance, token lengths, word cloud.  
+3. **Hyperparameter Tuning** – run an Optuna search and train the best model.  
+4. **Model Analysis** – precision / recall, confusion matrix, and error cases.
+"""
+)
 
-### 🧭 App Sections
-- **Inference Interface**: Try out the model with your own text.
-- **Dataset Visualization**: Explore visual summaries and data insights.
-- **Hyperparameter Tuning**: See how the model was optimized.
-- **Model Analysis & Justification**: Understand model performance, limitations, and possible improvements.
-
----
-
-**To get started**, select a page from the sidebar 👈
-""")
-
-st.info("Tip: If running locally, use `streamlit run streamlit_app.py`")
-
-st.markdown("---")
-st.caption("Built with ❤️ using HuggingFace Transformers and Streamlit.")
-
+st.info("Choose a page on the left to begin 👉")

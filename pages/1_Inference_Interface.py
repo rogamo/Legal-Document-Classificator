@@ -1,16 +1,28 @@
 import streamlit as st
+import numpy as np
+import tensorflow as tf
+import pickle
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+from utils.preprocessing import MAX_LEN
 
-st.title("🧠 Inference Interface")
+st.header("📝 Fake-News Detector – Inference")
 
-st.markdown("Enter your text below and get predictions from the model.")
+@st.cache_resource
+def load_model():
+    return tf.keras.models.load_model("models/bi_lstm_fake_news.h5")
 
-# Placeholder for your inference logic
-user_input = st.text_area("Input Text", placeholder="Type something here...")
+@st.cache_resource
+def load_tokenizer():
+    with open("models/tokenizer.pkl", "rb") as f:
+        return pickle.load(f)
 
+model = load_model()
+tokenizer = load_tokenizer()
+
+text = st.text_area("Paste a news headline or sentence:", height=100)
 if st.button("Predict"):
-    # Replace with your actual model prediction code
-    pred_class = "Happy 😊"
-    confidence = 0.93
-
-    st.success(f"Predicted Class: **{pred_class}**")
-    st.info(f"Confidence: {confidence*100:.2f}%")
+    seq = tokenizer.texts_to_sequences([text])
+    padded = pad_sequences(seq, maxlen=MAX_LEN, padding="post", truncating="post")
+    prob = float(model.predict(padded)[0])
+    label = "FAKE 🛑" if prob >= 0.5 else "REAL ✅"
+    st.metric("Prediction", label, delta=f"{prob*100:.1f}% confidence")
