@@ -10,6 +10,11 @@ st.header("📊 Dataset Visualisation")
 
 df = load_fake_news()
 
+st.subheader("🔍 Random example")
+example = df.sample(1).iloc[0]
+st.write(f"**Label:** {'REAL' if example.target==0 else 'FAKE'}")
+st.write(example.text)
+
 st.subheader("Class distribution")
 fig, ax = plt.subplots()
 sns.countplot(df, x="target", ax=ax)
@@ -27,3 +32,4 @@ st.subheader("Word cloud – FAKE news")
 fake_text = " ".join(df[df["target"] == 1]["text"].tolist())
 wc = WordCloud(width=800, height=400).generate(fake_text)
 st.image(wc.to_array())
+

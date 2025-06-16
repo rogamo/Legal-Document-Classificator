@@ -25,4 +25,5 @@ if st.button("Predict"):
     padded = pad_sequences(seq, maxlen=MAX_LEN, padding="post", truncating="post")
     prob = float(model.predict(padded)[0])
     label = "FAKE 🛑" if prob >= 0.5 else "REAL ✅"
-    st.metric("Prediction", label, delta=f"{prob*100:.1f}% confidence")
+    confidence = prob if label.startswith("FAKE") else 1 - prob
+    st.metric("Prediction", label, delta=f"{confidence*100:.1f}% confidence")
